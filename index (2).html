@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AERO CONV — Convertitore SI / Imperiale</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&display=swap');
+
+  :root {
+    --bg-deep:     #080c10;
+    --bg-panel:    #0d1520;
+    --bg-card:     #111d2e;
+    --bg-input:    #0a1520;
+    --border:      #1e3a5f;
+    --border-glow: #2a6496;
+    --accent:      #00d4ff;
+    --accent2:     #ff6b35;
+    --accent3:     #39ff14;
+    --text-main:   #c8dff0;
+    --text-dim:    #5a8aaa;
+    --text-label:  #8ab4cc;
+    --amber:       #ffb347;
+    --red-warn:    #ff4444;
+    --grid-color:  rgba(0, 212, 255, 0.04);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--text-main);
+    font-family: 'Exo 2', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image:
+      linear-gradient(var(--grid-color) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-color) 1px, transparent 1px),
+      radial-gradient(ellipse 80% 60% at 50% -10%, rgba(0,100,180,0.18) 0%, transparent 70%);
+    background-size: 40px 40px, 40px 40px, 100% 100%;
+  }
+
+  /* Scanlines overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  /* ===== HEADER ===== */
+  header {
+    text-align: center;
+    padding: 2.4rem 1rem 1.2rem;
+    position: relative;
+  }
+
+  .header-badge {
+    display: inline-block;
+    border: 1px solid var(--border-glow);
+    background: rgba(0,212,255,0.04);
+    padding: 0.2rem 1rem;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    margin-bottom: 0.7rem;
+    text-transform: uppercase;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  }
+
+  h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    font-size: clamp(1.8rem, 5vw, 3.2rem);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, #ffffff 0%, var(--accent) 50%, #0090bb 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+    line-height: 1.1;
+  }
+
+  .subtitle {
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    margin-top: 0.4rem;
+  }
+
+  .header-line {
+    width: 100%;
+    max-width: 900px;
+    margin: 1.2rem auto 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), var(--border-glow), transparent);
+    position: relative;
+  }
+  .header-line::after {
+    content: '◆';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%,-50%);
+    color: var(--accent);
+    font-size: 0.6rem;
+    background: var(--bg-deep);
+    padding: 0 6px;
+  }
+
+  /* ===== NAV TABS ===== */
+  .nav-container {
+    max-width: 980px;
+    margin: 2rem auto 0;
+    padding: 0 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: center;
+  }
+
+  .tab-btn {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    background: var(--bg-panel);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    padding: 0.55rem 1.1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+    position: relative;
+    white-space: nowrap;
+  }
+
+  .tab-btn:hover {
+    color: var(--accent);
+    border-color: var(--border-glow);
+    background: rgba(0,212,255,0.06);
+  }
+
+  .tab-btn.active {
+    background: rgba(0,212,255,0.12);
+    color: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 12px rgba(0,212,255,0.25), inset 0 0 8px rgba(0,212,255,0.05);
+  }
+
+  .tab-btn .tab-icon { margin-right: 5px; font-size: 0.75rem; }
+
+  /* ===== MAIN CONTENT ===== */
+  main {
+    max-width: 980px;
+    margin: 1.5rem auto 4rem;
+    padding: 0 1rem;
+  }
+
+  .converter-panel {
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+  .converter-panel.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== PANEL HEADER ===== */
+  .panel-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.4rem;
+    padding-bottom: 0.8rem;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  .panel-header::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: 0; width: 120px; height: 1px;
+    background: var(--accent);
+  }
+
+  .panel-icon {
+    font-size: 2rem;
+    filter: drop-shadow(0 0 8px var(--accent));
+  }
+
+  .panel-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .panel-desc {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    margin-top: 2px;
+  }
+
+  /* ===== CONVERSION GRID ===== */
+  .conversions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+    gap: 1rem;
+  }
+
+  @media (max-width: 500px) {
+    .conversions-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ===== CONVERSION CARD ===== */
+  .conv-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 1.2rem;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .conv-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .conv-card:focus-within {
+    border-color: var(--border-glow);
+    box-shadow: 0 0 16px rgba(0,212,255,0.1);
+  }
+  .conv-card:focus-within::before { opacity: 1; }
+
+  .conv-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .conv-label::before {
+    content: '▸';
+    color: var(--accent);
+    font-size: 0.5rem;
+  }
+
+  .fields-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.9rem;
+  }
+
+  .field-group { display: flex; flex-direction: column; gap: 0.3rem; }
+
+  .field-unit {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    color: var(--text-label);
+    text-transform: uppercase;
+  }
+
+  input[type="number"] {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.05rem;
+    padding: 0.55rem 0.7rem;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -moz-appearance: textfield;
+    clip-path: polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%);
+  }
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+  input[type="number"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 8px rgba(0,212,255,0.2);
+    color: #fff;
+  }
+
+  input[type="number"].result-field {
+    color: var(--accent);
+    border-color: rgba(0,212,255,0.3);
+    background: rgba(0,212,255,0.04);
+  }
+
+  .arrow-btn {
+    background: rgba(0,212,255,0.08);
+    border: 1px solid var(--border-glow);
+    color: var(--accent);
+    font-size: 1rem;
+    width: 36px; height: 36px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    clip-path: polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%);
+    align-self: flex-end;
+    margin-bottom: 1px;
+  }
+  .arrow-btn:hover {
+    background: rgba(0,212,255,0.2);
+    box-shadow: 0 0 10px rgba(0,212,255,0.3);
+    transform: scale(1.05);
+  }
+  .arrow-btn:active { transform: scale(0.95); }
+
+  /* ===== FORMULA BOX ===== */
+  .formula-box {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(0,212,255,0.1);
+    border-left: 2px solid var(--accent2);
+    padding: 0.5rem 0.7rem;
+    margin-top: 0.2rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .formula-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.55rem;
+    color: var(--accent2);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .formula-text {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    color: #c0c8d8;
+    line-height: 1.4;
+  }
+
+  .formula-text span {
+    color: var(--amber);
+  }
+
+  /* ===== TEMPERATURE SPECIAL ===== */
+  .temp-formula { font-size: 0.65rem; }
+
+  /* ===== STATUS BAR ===== */
+  .status-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(8,12,16,0.95);
+    border-top: 1px solid var(--border);
+    padding: 0.4rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    z-index: 100;
+  }
+
+  .status-item { display: flex; align-items: center; gap: 0.4rem; }
+  .status-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent3);
+    box-shadow: 0 0 6px var(--accent3);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* ===== CORNER DECORATIONS ===== */
+  .corner-dec {
+    position: absolute;
+    width: 12px; height: 12px;
+    opacity: 0.4;
+  }
+  .corner-dec.tl { top: 0; left: 0; border-top: 1px solid var(--accent); border-left: 1px solid var(--accent); }
+  .corner-dec.tr { top: 0; right: 0; border-top: 1px solid var(--accent); border-right: 1px solid var(--accent); }
+  .corner-dec.bl { bottom: 0; left: 0; border-bottom: 1px solid var(--accent); border-left: 1px solid var(--accent); }
+  .corner-dec.br { bottom: 0; right: 0; border-bottom: 1px solid var(--accent); border-right: 1px solid var(--accent); }
+
+  /* ===== SECTION DIVIDER ===== */
+  .section-divider {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin: 0.4rem 0 0.2rem;
+  }
+  .section-divider-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--accent2);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .section-divider-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(255,107,53,0.4), transparent);
+  }
+
+  /* Responsive */
+  @media (max-width: 700px) {
+    .conversions-grid { grid-template-columns: 1fr; }
+    .fields-row { grid-template-columns: 1fr auto 1fr; }
+    input[type="number"] { font-size: 0.9rem; }
+    .status-bar { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-badge">▸ SISTEMA CONVERSIONE UNITÀ ◂</div>
+  <h1>AERO CONV</h1>
+  <p class="subtitle">SI &nbsp;⟷&nbsp; IMPERIAL UNIT SYSTEM &nbsp;|&nbsp; REV 4.1.0</p>
+  <p class="subtitle" style="margin-top:0.45rem; color:var(--amber); letter-spacing:0.22em;">© IMAD EZZAROUALI</p>
+  <div class="header-line"></div>
+</header>
+
+<!-- TAB NAV -->
+<nav class="nav-container" id="tabNav">
+  <button class="tab-btn active" data-tab="lunghezza"><span class="tab-icon">📏</span>Lunghezza</button>
+  <button class="tab-btn" data-tab="massa"><span class="tab-icon">⚖️</span>Massa</button>
+  <button class="tab-btn" data-tab="forza"><span class="tab-icon">⚡</span>Forza</button>
+  <button class="tab-btn" data-tab="pressione"><span class="tab-icon">🌡</span>Pressione</button>
+  <button class="tab-btn" data-tab="velocita"><span class="tab-icon">🚀</span>Velocità</button>
+  <button class="tab-btn" data-tab="temperatura"><span class="tab-icon">🌡️</span>Temperatura</button>
+  <button class="tab-btn" data-tab="potenza"><span class="tab-icon">⚙️</span>Potenza</button>
+  <button class="tab-btn" data-tab="area"><span class="tab-icon">▦</span>Area</button>
+</nav>
+
+<main>
+
+<!-- ==================== LUNGHEZZA ==================== -->
+<section class="converter-panel active" id="panel-lunghezza">
+  <div class="panel-header">
+    <div class="panel-icon">📏</div>
+    <div>
+      <div class="panel-title">Lunghezza</div>
+      <div class="panel-desc">LENGTH / DISTANCE CONVERSION MODULE</div>
+    </div>
+  </div>
+  <div class="conversions-grid">
+
+    <div class="conv-card">
+      <div class="corner-dec tl"></div><div class="corner-dec tr"></div>
+      <div class="corner-dec bl"></div><div class="corner-dec br"></div>
+      <div class="conv-label">Metro ↔ Piede</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <div class="field-unit">Metro [m]</div>
+          <input type="number" id="m_ft_m" placeholder="0" oninput="conv('m_ft_m','m_ft_ft', v=>v*3.28084, v=>v/3.28084)">
+        </div>
+        <button class="arrow-btn" onclick="swap('m_ft_m','m_ft_ft', v=>v*3.28084, v=>v/3.28084)">⇄</button>
+        <div class="field-group">
+          <div class="field-unit">Piede [ft]</div>
+          <input type="number" id="m_ft_ft" class="result-field" placeholder="0" oninput="conv('m_ft_ft','m_ft_m', v=>v/3.28084, v=>v*3.28084)">
+        </div>
+      </div>
+      <div class="formula-box">
+        <span class="formula-label">Formula</span>
+        <span class="formula-text">ft = m × <span>3.28084</span> &nbsp;|&nbsp; m = ft ÷ <span>3.28084</span></span>
+      </div>
+    </div>
+
+    <div class="conv-card">
+      <div class="corner-dec tl"></div><div class="corner-dec tr"></div>
+      <div class="corner-dec bl"></div><div class="corner-dec br"></div>
+      <div class="conv-label">Chilometro ↔ Miglio</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <div class="field-unit">Chilometro [km]</div>
+          <input type="number" id="km_mi_km" placeholder="0" oninput="conv('km_mi_km','km_mi_mi', v=>v*0.621371, v=>v/0.621371)">
+        </div>
+        <button class="arrow-btn" onclick="swap('km_mi_km','km_mi_mi', v=>v*0.621371, v=>v/0.621371)">⇄</button>
+        <div class="field-group">
+          <div class="field-unit">Miglio [mi]</div>
+          <input type="number" id="km_mi_mi" class="result-field" placeholder="0" oninput="conv('km_mi_mi','km_mi_km', v=>v/0.621371, v=>v*0.621371)">
+        </div>
+      </div>
+      <div class="formula-box">
+        <span class="formula-label">Formula</span>
+        <span class="formula-text">mi = km × <span>0.621371</span> &nbsp;|&nbsp; km = mi ÷ <span>0.621371</span></span>
+      </div>
+    </div>
+
+    <div class="conv-card">
+      <div class="corner-dec tl"></div><div class="corner-dec tr"></div>
+      <div class="corner-dec bl"></div><div class="corner-dec br"></div>
+      <div class="conv-label">Centimetro ↔ Pollice</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <div class="field-unit">Centimetro [cm]</div>
+          <input type="number" id="cm_in_cm" placeholder="0" oninput="conv('cm_in_cm','cm_in_in', v=>v/2.54, v=>v*2.54)">
+        </div>
+        <button class="arrow-btn" onclick="swap('cm_in_cm','cm_in_in', v=>v/2.54, v=>v*2.54)">⇄</button>
+        <div class="field-group">
+          <div class="field-unit">Pollice [in]</div>
+          <input type="number" id="cm_in_in" class="result-field" placeholder="0" oninput="conv('cm_in_in','cm_in_cm', v=>v*2.54, v=>v/2.54)">
+        </div>
+      </div>
+      <div class="formula-box">
+        <span class="formula-label">Formula</span>
+        <span class="formula-text">in = cm ÷ <span>2.54</span> &nbsp;|&nbsp; cm = in × <span>2.54</span></span>
+      </div>
+    </div>
+
+    <div class="conv-card">
+      <div class="corner-dec tl"></div><div class="corner-dec tr"></div>
+      <div class="corner-dec bl"></div><div class="corner-dec br"></div>
+      <div class="conv-label">Metro ↔ Iarda</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <div class="field-unit">Metro [m]</div>
+          <input type="number" id="m_yd_m" placeholder="0" oninput="conv('m_yd_m','m_yd_yd', v=>v*1.09361, v=>v/1.09361)">
+        </div>
+        <button class="arrow-btn" onclick="swap('m_yd_m','m_yd_yd', v=>v*1.09361, v=>v/1.09361)">⇄</button>
+        <div class="field-group">
+          <div class="field-unit">Iarda [yd]</div>
+          <input type="number" id="m_yd_yd" class="result-field" placeholder="0" oninput="conv('m_yd_yd','m_yd_m', v=>v/1.09361, v=>v*1.09361)">
+        </div>
+      </div>
+      <div class="formula-box">
+        <span class="formula-label">Formula</span>
+        <span class="formula-text">yd = m × <span>1.09361</span> &nbsp;|&nbsp; m = yd ÷ <span>1.09361</span></span>
+      </div>
+    </div>
+
+    <div class="conv-card">
+      <div class="corner-dec tl"></div><div class="corner-dec tr"></div>
+      <div class="corner-dec bl"></div><div class="corner-dec br"></div>
+      <div class="conv-label">Metro ↔ Miglio nautico</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <div class="field-unit">Metro [m]</div>
+          <input type="number" id="m_nm_m" placeholder="0" oninput="conv('m_nm_m','m_nm_nm', v=>v/1852, v=>v*1852)">
+        </div>
+        <button class="arrow-btn" onclick="swap('m_nm_m','m_nm_nm', v=>v/1852, v=>v*1852)">⇄</button>
+        <div class="field-group">
+          <div class="field-unit">Miglio naut. [NM]</div>
+          <input type="number" id="m_nm_nm" class="result-field" placeholder="0" oninput="conv('m_nm_nm','m_nm_m', v=>v*1852, v=>v/1852)">
+        </div>
+      </div>
+      <div class="formula-box">
+        <span class="formula-label">Formula</span>
+        <span class="formula-text">NM = m ÷ <span>1852</span> &nbsp;|&nbsp; m = NM × <span>1852</span></span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ==================== MASSA ==================== -->
+<section class="converter-panel" id="panel-massa">
+  <div class="panel-header">
+    <div class="panel-icon">⚖️</div>
+    <div>
+      <div class="panel-title">Massa</div>
+      <div class="panel-desc">MASS / WEIGHT CONVERSION MODULE</div>
+    </div>
+  </div>
+  <div class="conversions-grid">
+
+    <div class="conv-card">
+      <div class="corner-dec tl"></div><div class="corner-dec tr"></div>
+      <div class="corner-dec bl"></div><div class="corner-dec br"></div>
+      <div class="conv-label">Chilogrammo ↔ Libbra</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <div class="field-unit">Chilogrammo [kg]</div>
+          <input type="number" id="kg_lb_kg" placeholder="0" oninput="conv('kg_lb_kg','kg_lb_lb', v=>v*2.20462, v=>v/2.20462)">
+        </div>
+        <button class="arrow-btn" onclick="swap('kg_lb_kg','kg_lb_lb', v=>v*2.20462, v=>v/2.20462)">⇄</button>
+        <div class="field-group">
+          <div class="field-unit">Libbra [lb]</div>
+          <input type="number" id="kg_lb_lb" class="result-field" placeholder="0" oninput="conv('kg_lb_lb','kg_lb_kg', v=>v/2.20462, v=>v*2.20462)">
+        </div>
+      </div>
+      <div class="formula-box">
+        <span class="formula-label">Formula</span>
+        <span class="formula-text">lb = kg × <span>2.20462</span> &nbsp;|&nbsp; kg = lb ÷ <span>2.20462</span></span>
+      </div>
+    </div>
+
+    <div class="conv-card">
+      <div class="corner-dec tl"></div><div class="corner-dec tr"></div>
+      <div class="corner-dec bl"></div><div class="corner-dec br"></div>
+      <div class="conv-label">Grammo ↔ Oncia</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <div class="field-unit">Grammo [g]</div>
+          <input type="number" id="g_oz_g" placeholder="0" oninput="conv('g_oz_g','g_oz_oz', v=>v/28.3495, v=>v*28.3495)">
+        </div>
+        <button class="arrow-btn" onclick="swap('g_oz_g','g_oz_oz', v=>v/28.3495, v=>v*28.3495)">⇄</button>
+        <div class="field-group">
+          <div class="field-unit">Oncia [oz]</div>
+          <input type="number" id="g_oz_oz" class="result-field" placeholder="0" oninput="conv('g_oz_oz','g_oz_g', v=>v*28.3495, v=>v/28.3495)">
+        </div>
+      </div>
+      <div class="formula-box">
+        <span class="formula-label">Formula</span>
+        <span class="formula-text">oz = g ÷ <span>28.3495</span> &nbsp;|&nbsp; g = oz × <span>28.3495</span></span>
+      </div>
+    </div>
+
+    <div class="conv-card">
+      <div class="corner-dec tl"></div><div class="corner-dec tr"></div>
+      <div class="corner-dec bl"></div><div class="corner-dec br"></div>
+      <div class="conv-label">Tonnellata ↔ Tonnellata corta (US)</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <div class="field-unit">Tonn. metrica [t]</div>
+          <input type="number" id="t_st_t" placeholder="0" oninput="conv('t_st_t','t_st_st', v=>v*1.10231, v=>v/1.10231)">
+        </div>
+        <button class="arrow-btn" onclick="swap('t_st_t','t_st_st', v=>v*1.10231, v=>v/1.10231)">⇄</button>
+        <div class="field-group">
+          <div class="field-unit">Ton. corta [short tn]</div>
+          <input type="number" id="t_st_st" class="result-field" placeholder="0" oninput="conv('t_st_st','t_st_t', v=>v/1.10231, v=>v*1.10231)">
+        </div>
+      </div>
+      <div class="formula-box">
+        <span class="formula-label">Formula</span>
+        <span class="formula-text">short tn = t × <span>1.10231</span> &nbsp;|&nbsp; t = short tn ÷ <span>1.10231</span></span>
+      </div>
+    </div>
+
+    <div class="conv-card">
+      <div class="corner-dec tl"></div><div class="corner-dec tr"></div>
+      <div class="corner-dec bl"></div><div class="corner-dec br"></div>
+      <div class="conv-label">Chilogrammo ↔ Stone</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <div class="field-unit">Chilogrammo [kg]</div>
+          <input type="number" id="kg_st_kg" placeholder="0" oninput="conv('kg_st_kg','kg_st_st', v=>v/6.35029, v=>v*6.35029)">
+        </div>
+        <button class="arrow-btn" onclick="swap('kg_st_kg','kg_st_st', v=>v/6.35029, v=>v*6.35029)">⇄</button>
+        <div class="field-group">
+          <div class="field-unit">Stone [st]</div>
+          <input type="number" id="kg_st_st" class="result-field" placeholder="0" oninput="conv('kg_st_st','kg_st_kg', v=>v*6.35029, v=>v/6.35029)">
+        </div>
+      </div>
+      <div class="formula-box">
+        <span class="formula-label">Formula</span>
+        <span class="formula-text">st = kg ÷ <span>6.35029</span> &nbsp;|&nbsp; kg = st × <span>6.35029</span></span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ==================== FORZA ==================== -->
+<section class="converter-panel" id="panel-forza">
+  <div class="panel-header">
+    <div class="panel-icon">⚡</div>
+    <div>
+      <div class="panel-title">Forza</div>
+      <div class="panel-desc">FORCE CONVERSION MODULE</div>
+    </div>
+  </div>
+  <div class="conversions-grid">
+
+    <div class="conv-card">
+      <div class="corner-dec tl"></div><div class="corner-dec tr"></div>
+      <div class="corner-dec bl"></div><div class="corner-dec br"></div>
+      <div class="conv-label">Newton ↔ Libbra-forza</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <div class="field-unit">Newton [N]</div>
+          <input type="number" id="n_lbf_n" placeholder="0" oninput="conv('n_lbf_n','n_lbf_lbf', v=>v*0.224809, v=>v/0.224809)">
+        </div>
+        <button class="arrow-btn" onclick="swap('n_lbf_n','n_lbf_lbf', v=>v*0.224809, v=>v/0.224809)">⇄</button>
+        <div class="field-group">
+          <div class="field-unit">Libbra-forza [lbf]</div>
+          <input type="number" id="n_lbf_lbf" class="result-field" placeholder="0" oninput="conv('n_lbf_lbf','n_lbf_n', v=>v/0.224809, v=>v*0.224809)">
+        </div>
+      </div>
+      <div class="formula-box">
+        <span class="formula-label">Formula</span>
+        <span class="formula-text">lbf = N × <span>0.224809</span> &nbsp;|&nbsp; N = lbf ÷ <span>0.224809</span></span>
+      </div>
+    </div>
+
+    <div class="conv-card">
+      <div class="corner-dec tl"></div><div class="corner-dec tr"></div>
+      <div class="corner-dec bl"></div><div class="corner-dec br"></div>
+      <div class="conv-label">Kilonewton ↔ Libbra-forza</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <div class="field-unit">Kilonewton [kN]</div>
+          <input type="number" id="kn_lbf_kn" placeholder="0" oninput="conv('kn_lbf_kn','kn_lbf_lbf', v=>v*224.809, v=>v/224.809)">
+        </div>
+        <button class="arrow-btn" onclick="swap('kn_lbf_kn','kn_lbf_lbf', v=>v*224.809, v=>v/224.809)">⇄</button>
+        <div class="field-group">
+          <div class="field-unit">Libbra-forza [lbf]</div>
+          <input type="number" id="kn_lbf_lbf" class="result-field" placeholder="0" oninput="conv('kn_lbf_lbf','kn_lbf_kn', v=>v/224.809, v=>v*224.809)">
+        </div>
+      </div>
+      <div class="formula-box">
+        <span class="formula-label">Formula</span>
+        <span class="formula-text">lbf = kN × <span>224.809</span> &nbsp;|&nbsp; kN = lbf ÷ <span>224.809</span></span>
+      </div>
+    </div>
+
+    <div class="conv-card">
+      <div class="corner-dec tl"></div><div class="corner-dec tr"></div>
+      <div class="corner-dec bl"></div><div class="corner-dec br"></div>
+      <div class="conv-label">Newton ↔ Chilogrammo-forza</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <div class="field-unit">Newton [N]</div>
+          <input type="number" id="n_kgf_n" placeholder="0" oninput="conv('n_kgf_n','n_kgf_kgf', v=>v/9.80665, v=>v*9.80665)">
+        </div>
+        <button class="arrow-btn" onclick="swap('n_kgf_n','n_kgf_kgf', v=>v/9.80665, v=>v*9.80665)">⇄</button>
+        <div class="field-group">
+          <div class="field-unit">Kgf [kgf]</div>
+          <input type="number" id="n_kgf_kgf" class="result-field" placeholder="0" oninput="conv('n_kgf_kgf','n_kgf_n', v=>v*9.80665, v=>v/9.80665)">
+        </div>
+      </div>
+      <div class="formula-box">
+        <span class="formula-label">Formula</span>
+        <span class="formula-text">kgf = N ÷ <span>9.80665</span> &nbsp;|&nbsp; N = kgf × <span>9.80665</span></span>
+      </div>
+    </div>
+
+    <div class="conv-card">
+      <div class="corner-dec tl"></div><div class="corner-dec tr"></div>
+      <div class="corner-dec bl"></div><div class="corner-dec br"></div>
+      <div class="conv-label">Dina ↔ Newton</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <div class="field-unit">Dina [dyn]</div>
+          <input type="number" id="dyn_n_dyn" placeholder="0" oninput="conv('dyn_n_dyn','dyn_n_n', v=>v/100000, v=>v*100000)">
+        </div>
+        <button class="arrow-btn" onclick="swap('dyn_n_dyn','dyn_n_n', v=>v/100000, v=>v*100000)">⇄</button>
+        <div class="field-group">
+          <div class="field-unit">Newton [N]</div>
+          <input type="number" id="dyn_n_n" class="result-field" placeholder="0" oninput="conv('dyn_n_n','dyn_n_dyn', v=>v*100000, v=>v/100000)">
+        </div>
+      </div>
+      <div class="formula-box">
+        <span class="formula-label">Formula</span>
+        <span class="formula-text">N = dyn ÷ <span>100,000</span> &nbsp;|&nbsp; dyn = N × <span>100,000</span></span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ==================== PRESSIONE ==================== -->
+<section class="converter-panel" id="panel-pressione">
+  <div class="panel-header">
+    <div class="panel-icon">🌡</div>
+    <div>
+      <div class="panel-title">Pressione</div>
+      <div class="panel-desc">PRESSURE CONVERSION MODULE</div>
+    </div>
+  </div>
+  <div class="conversions-grid">
+
+    <div class="conv-card">
+      <div class="corner-dec tl"></div><div class="corner-dec tr"></div>
+      <div class="corner-dec bl"></div><div class="corner-dec br"></div>
+      <div class="conv-label">Pascal ↔ PSI</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <div class="field-unit">Pascal [Pa]</div>
+          <input type="number" id="pa_psi_pa" placeholder="0" oninput="conv('pa_psi_pa','pa_psi_psi', v=>v*0.000145038, v=>v/0.000145038)">
+        </div>
+        <button class="arrow-btn" onclick="swap('pa_psi_pa','pa_psi_psi', v=>v*0.000145038, v=>v/0.000145038)">⇄</button>
+        <div class="field-group">
+          <div class="field-unit">PSI [psi]</div>
+          <input type="number" id="pa_psi_psi" class="result-field" placeholder="0" oninput="conv('pa_psi_psi','pa_psi_pa', v=>v/0.000145038, v=>v*0.000145038)">
+        </div>
+      </div>
+      <div class="formula-box">
+        <span class="formula-label">Formula</span>
+        <span class="formula-text">psi = Pa × <span>0.000145038</span> &nbsp;|&nbsp; Pa = psi ÷ <span>0.000145038</span></span>
+      </div>
+    </div>
+
+    <div class="conv-card">
+      <div class="corner-dec tl"></div><div class="corner-dec tr"></div>
+      <div class="corner-dec bl"></div><div class="corner-dec br"></div>
+      <div class="conv-label">Bar ↔ PSI</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <div class="field-unit">Bar [bar]</div>
+          <input type="number" id="bar_psi_bar" placeholder="0" oninput="conv('bar_psi_bar','bar_psi_psi', v=>v*14.5038, v=>v/14.5038)">
+        </div>
+        <button class="arrow-btn" onclick="swap('bar_psi_bar','bar_psi_psi', v=>v*14.5038, v=>v/14.5038)">⇄</button>
+        <div class="field-group">
+          <div class="field-unit">PSI [psi]</div>
+          <input type="number" id="bar_psi_psi" class="result-field" placeholder="0" oninput="conv('bar_psi_psi','bar_psi_bar', v=>v/14.5038, v=>v*14.5038)">
+        </div>
+      </div>
+      <div class="formula-box">
+        <span class="formula-label">Formula</span>
+        <span class="formula-text">psi = bar × <span>14.5038</span> &nbsp;|&nbsp; bar = psi ÷ <span>14.5038</span></span>
+      </div>
+    </div>
+
+    <div class="conv-card">
+      <div class="corner-dec tl"></div><div class="corner-dec tr"></div>
+      <div class="corner-dec bl"></div><div class="corner-dec br"></div>
+      <div class="conv-label">Atmosfera ↔ PSI</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <div class="field-unit">Atmosfera [atm]</div>
+          <input type="number" id="atm_psi_atm" placeholder="0" oninput="conv('atm_psi_atm','atm_psi_psi', v=>v*14.696, v=>v/14.696)">
+        </div>
+        <button class="arrow-btn" onclick="swap('atm_psi_atm','atm_psi_psi', v=>v*14.696, v=>v/14.696)">⇄</button>
+        <div class="field-group">
+          <div class="field-unit">PSI [psi]</div>
+          <input type="number" id="atm_psi_psi" class="result-field" placeholder="0" oninput="conv('atm_psi_psi','atm_psi_atm', v=>v/14.696, v=>v*14.696)">
+        </div>
+      </div>
+      <div class="formula-box">
+        <span class="formula-label">Formula</span>
+        <span class="formula-text">psi = atm × <span>14.696</span> &nbsp;|&nbsp; atm = psi ÷ <span>14.696</span></span>
+      </div>
+    </div>
+
+    <div class="conv-card">
+      <div class="corner-dec tl"></div><div class="corner-dec tr"></div>
+      <div class="corner-dec bl"></div><div class="corner-dec br"></div>
+      <div class="conv-label">Kilopascal ↔ Bar</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <div class="field-unit">Kilopascal [kPa]</div>
+          <input type="number" id="kpa_bar_kpa" placeholder="0" oninput="conv('kpa_bar_kpa','kpa_bar_bar', v=>v/100, v=>v*100)">
+        </div>
+        <button class="arrow-btn" onclick="swap('kpa_bar_kpa','kpa_bar_bar', v=>v/100, v=>v*100)">⇄</button>
+        <div class="field-group">
+          <div class="field-unit">Bar [bar]</div>
+          <input type="number" id="kpa_bar_bar" class="result-field" placeholder="0" oninput="conv('kpa_bar_bar','kpa_bar_kpa', v=>v*100, v=>v/100)">
+        </div>
+      </div>
+      <div class="formula-box">
+        <span class="formula-label">Formula</span>
+        <span class="formula-text">bar = kPa ÷ <span>100</span> &nbsp;|&nbsp; kPa = bar × <span>100</span></span>
+      </div>
+    </div>
+
+    <div class="conv-card">
+      <div class="corner-dec tl"></div><div class="corner-dec tr"></div>
+      <div class="corner-dec bl"></div><div class="corner-dec br"></div>
+      <div class="conv-label">mmHg (Torr) ↔ PSI</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <div class="field-unit">mmHg [Torr]</div>
+          <input type="number" id="mmhg_psi_mmhg" placeholder="0" oninput="conv('mmhg_psi_mmhg','mmhg_psi_psi', v=>v*0.0193368, v=>v/0.0193368)">
+        </div>
+        <button class="arrow-btn" onclick="swap('mmhg_psi_mmhg','mmhg_psi_psi', v=>v*0.0193368, v=>v/0.0193368)">⇄</button>
+        <div class="field-group">
+          <div class="field-unit">PSI [psi]</div>
+          <input type="number" id="mmhg_psi_psi" class="result-field" placeholder="0" oninput="conv('mmhg_psi_psi','mmhg_psi_mmhg', v=>v/0.0193368, v=>v*0.0193368)">
+        </div>
+      </div>
+      <div class="formula-box">
+        <span class="formula-label">Formula</span>
+        <span class="formula-text">psi = mmHg × <span>0.0193368</span> &nbsp;|&nbsp; mmHg = psi ÷ <span>0.0193368</span></span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ==================== VELOCITA ==================== -->
+<section class="converter-panel" id="panel-velocita">
+  <div class="panel-header">
+    <div class="panel-icon">🚀</div>
+    <div>
+      <div class="panel-title">Velocità</div>
+      <div class="panel-desc">VELOCITY / SPEED CONVERSION MODULE</div>
+    </div>
+  </div>
+  <div class="conversions-grid">
+
+    <div class="conv-card">
+      <div class="corner-dec tl"></div><div class="corner-dec tr"></div>
+      <div class="corner-dec bl"></div><div class="corner-dec br"></div>
+      <div class="conv-label">km/h ↔ mph</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <div class="field-unit">Chilometri/ora [km/h]</div>
+          <input type="number" id="kmh_mph_kmh" placeholder="0" oninput="conv('kmh_mph_kmh','kmh_mph_mph', v=>v*0.621371, v=>v/0.621371)">
+        </div>
+        <button class="arrow-btn" onclick="swap('kmh_mph_kmh','kmh_mph_mph', v=>v*0.621371, v=>v/0.621371)">⇄</button>
+        <div class="field-group">
+          <div class="field-unit">Miglia/ora [mph]</div>
+          <input type="number" id="kmh_mph_mph" class="result-field" placeholder="0" oninput="conv('kmh_mph_mph','kmh_mph_kmh', v=>v/0.621371, v=>v*0.621371)">
+        </div>
+      </div>
+      <div class="formula-box">
+        <span class="formula-label">Formula</span>
+        <span class="formula-text">mph = km/h × <span>0.621371</span> &nbsp;|&nbsp; km/h = mph ÷ <span>0.621371</span></span>
+      </div>
+    </div>
+
+    <div class="conv-card">
+      <div class="corner-dec tl"></div><div class="corner-dec tr"></div>
+      <div class="corner-dec bl"></div><div class="corner-dec br"></div>
+      <div class="conv-label">m/s ↔ mph</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <div class="field-unit">Metro/sec [m/s]</div>
+          <input type="number" id="ms_mph_ms" placeholder="0" oninput="conv('ms_mph_ms','ms_mph_mph', v=>v*2.23694, v=>v/2.23694)">
+        </div>
+        <button class="arrow-btn" onclick="swap('ms_mph_ms','ms_mph_mph', v=>v*2.23694, v=>v/2.23694)">⇄</button>
+        <div class="field-group">
+          <div class="field-unit">Miglia/ora [mph]</div>
+          <input type="number" id="ms_mph_mph" class="result-field" placeholder="0" oninput="conv('ms_mph_mph','ms_mph_ms', v=>v/2.23694, v=>v*2.23694)">
+        </div>
+      </div>
+      <div class="formula-box">
+        <span class="formula-label">Formula</span>
+        <span class="formula-text">mph = m/s × <span>2.23694</span> &nbsp;|&nbsp; m/s = mph ÷ <span>2.23694</span></span>
+      </div>
+    </div>
+
+    <div class="conv-card">
+      <div class="corner-dec tl"></div><div class="corner-dec tr"></div>
+      <div class="corner-dec bl"></div><div class="corner-dec br"></div>
+      <div class="conv-label">km/h ↔ Nodi (kn)</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <div class="field-unit">Chilometri/ora [km/h]</div>
+          <input type="number" id="kmh_kt_kmh" placeholder="0" oninput="conv('kmh_kt_kmh','kmh_kt_kt', v=>v*0.539957, v=>v/0.539957)">
+        </div>
+        <button class="arrow-btn" onclick="swap('kmh_kt_kmh','kmh_kt_kt', v=>v*0.539957, v=>v/0.539957)">⇄</button>
+        <div class="field-group">
+          <div class="field-unit">Nodi [kn]</div>
+          <input type="number" id="kmh_kt_kt" class="result-field" placeholder="0" oninput="conv('kmh_kt_kt','kmh_kt_kmh', v=>v/0.539957, v=>v*0.539957)">
+        </div>
+      </div>
+      <div class="formula-box">
+        <span class="formula-label">Formula</span>
+        <span class="formula-text">kn = km/h × <span>0.539957</span> &nbsp;|&nbsp; km/h = kn ÷ <span>0.539957</span></span>
+      </div>
+    </div>
+
+    <div class="conv-card">
+      <div class="corner-dec tl"></div><div class="corner-dec tr"></div>
+      <div class="corner-dec bl"></div><div class="corner-dec br"></div>
+      <div class="conv-label">m/s ↔ piedi/sec (fps)</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <div class="field-unit">Metro/sec [m/s]</div>
+          <input type="number" id="ms_fps_ms" placeholder="0" oninput="conv('ms_fps_ms','ms_fps_fps', v=>v*3.28084, v=>v/3.28084)">
+        </div>
+        <button class="arrow-btn" onclick="swap('ms_fps_ms','ms_fps_fps', v=>v*3.28084, v=>v/3.28084)">⇄</button>
+        <div class="field-group">
+          <div class="field-unit">Piedi/sec [fps]</div>
+          <input type="number" id="ms_fps_fps" class="result-field" placeholder="0" oninput="conv('ms_fps_fps','ms_fps_ms', v=>v/3.28084, v=>v*3.28084)">
+        </div>
+      </div>
+      <div class="formula-box">
+        <span class="formula-label">Formula</span>
+        <span class="formula-text">fps = m/s × <span>3.28084</span> &nbsp;|&nbsp; m/s = fps ÷ <span>3.28084</span></span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ==================== TEMPERATURA ==================== -->
+<section class="converter-panel" id="panel-temperatura">
+  <div class="panel-header">
+    <div class="panel-icon">🌡️</div>
+    <div>
+      <div class="panel-title">Temperatura</div>
+      <div class="panel-desc">TEMPERATURE CONVERSION MODULE</div>
+    </div>
+  </div>
+  <div class="conversions-grid">
+
+    <div class="conv-card">
+      <div class="corner-dec tl"></div><div class="corner-dec tr"></div>
+      <div class="corner-dec bl"></div><div class="corner-dec br"></div>
+      <div class="conv-label">Celsius ↔ Fahrenheit</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <div class="field-unit">Celsius [°C]</div>
+          <input type="number" id="c_f_c" placeholder="0" oninput="convTemp('c_f_c','c_f_f','c_to_f')">
+        </div>
+        <button class="arrow-btn" onclick="swapTemp('c_f_c','c_f_f','c_to_f','f_to_c')">⇄</button>
+        <div class="field-group">
+          <div class="field-unit">Fahrenheit [°F]</div>
+          <input type="number" id="c_f_f" class="result-field" placeholder="0" oninput="convTemp('c_f_f','c_f_c','f_to_c')">
+        </div>
+      </div>
+      <div class="formula-box">
+        <span class="formula-label">Formula</span>
+        <span class="formula-text temp-formula">°F = (°C × <span>9/5</span>) + <span>32</span> &nbsp;|&nbsp; °C = (°F − <span>32</span>) × <span>5/9</span></span>
+      </div>
+    </div>
+
+    <div class="conv-card">
+      <div class="corner-dec tl"></div><div class="corner-dec tr"></div>
+      <div class="corner-dec bl"></div><div class="corner-dec br"></div>
+      <div class="conv-label">Celsius ↔ Kelvin</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <div class="field-unit">Celsius [°C]</div>
+          <input type="number" id="c_k_c" placeholder="0" oninput="convTemp('c_k_c','c_k_k','c_to_k')">
+        </div>
+        <button class="arrow-btn" onclick="swapTemp('c_k_c','c_k_k','c_to_k','k_to_c')">⇄</button>
+        <div class="field-group">
+          <div class="field-unit">Kelvin [K]</div>
+          <input type="number" id="c_k_k" class="result-field" placeholder="0" oninput="convTemp('c_k_k','c_k_c','k_to_c')">
+        </div>
+      </div>
+      <div class="formula-box">
+        <span class="formula-label">Formula</span>
+        <span class="formula-text temp-formula">K = °C + <span>273.15</span> &nbsp;|&nbsp; °C = K − <span>273.15</span></span>
+      </div>
+    </div>
+
+    <div class="conv-card">
+      <div class="corner-dec tl"></div><div class="corner-dec tr"></div>
+      <div class="corner-dec bl"></div><div class="corner-dec br"></div>
+      <div class="conv-label">Fahrenheit ↔ Kelvin</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <div class="field-unit">Fahrenheit [°F]</div>
+          <input type="number" id="f_k_f" placeholder="0" oninput="convTemp('f_k_f','f_k_k','f_to_k')">
+        </div>
+        <button class="arrow-btn" onclick="swapTemp('f_k_f','f_k_k','f_to_k','k_to_f')">⇄</button>
+        <div class="field-group">
+          <div class="field-unit">Kelvin [K]</div>
+          <input type="number" id="f_k_k" class="result-field" placeholder="0" oninput="convTemp('f_k_k','f_k_f','k_to_f')">
+        </div>
+      </div>
+      <div class="formula-box">
+        <span class="formula-label">Formula</span>
+        <span class="formula-text temp-formula">K = (°F + <span>459.67</span>) × <span>5/9</span> &nbsp;|&nbsp; °F = K × <span>9/5</span> − <span>459.67</span></span>
+      </div>
+    </div>
+
+    <div class="conv-card">
+      <div class="corner-dec tl"></div><div class="corner-dec tr"></div>
+      <div class="corner-dec bl"></div><div class="corner-dec br"></div>
+      <div class="conv-label">Celsius ↔ Rankine</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <div class="field-unit">Celsius [°C]</div>
+          <input type="number" id="c_r_c" placeholder="0" oninput="convTemp('c_r_c','c_r_r','c_to_r')">
+        </div>
+        <button class="arrow-btn" onclick="swapTemp('c_r_c','c_r_r','c_to_r','r_to_c')">⇄</button>
+        <div class="field-group">
+          <div class="field-unit">Rankine [°R]</div>
+          <input type="number" id="c_r_r" class="result-field" placeholder="0" oninput="convTemp('c_r_r','c_r_c','r_to_c')">
+        </div>
+      </div>
+      <div class="formula-box">
+        <span class="formula-label">Formula</span>
+        <span class="formula-text temp-formula">°R = (°C + <span>273.15</span>) × <span>9/5</span> &nbsp;|&nbsp; °C = °R × <span>5/9</span> − <span>273.15</span></span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ==================== POTENZA ==================== -->
+<section class="converter-panel" id="panel-potenza">
+  <div class="panel-header">
+    <div class="panel-icon">⚙️</div>
+    <div>
+      <div class="panel-title">Potenza</div>
+      <div class="panel-desc">POWER CONVERSION MODULE</div>
+    </div>
+  </div>
+  <div class="conversions-grid">
+
+    <div class="conv-card">
+      <div class="corner-dec tl"></div><div class="corner-dec tr"></div>
+      <div class="corner-dec bl"></div><div class="corner-dec br"></div>
+      <div class="conv-label">Watt ↔ Cavalli vapore (HP)</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <div class="field-unit">Watt [W]</div>
+          <input type="number" id="w_hp_w" placeholder="0" oninput="conv('w_hp_w','w_hp_hp', v=>v*0.00134102, v=>v/0.00134102)">
+        </div>
+        <button class="arrow-btn" onclick="swap('w_hp_w','w_hp_hp', v=>v*0.00134102, v=>v/0.00134102)">⇄</button>
+        <div class="field-group">
+          <div class="field-unit">Cavalli (HP)</div>
+          <input type="number" id="w_hp_hp" class="result-field" placeholder="0" oninput="conv('w_hp_hp','w_hp_w', v=>v/0.00134102, v=>v*0.00134102)">
+        </div>
+      </div>
+      <div class="formula-box">
+        <span class="formula-label">Formula</span>
+        <span class="formula-text">HP = W × <span>0.00134102</span> &nbsp;|&nbsp; W = HP ÷ <span>0.00134102</span></span>
+      </div>
+    </div>
+
+    <div class="conv-card">
+      <div class="corner-dec tl"></div><div class="corner-dec tr"></div>
+      <div class="corner-dec bl"></div><div class="corner-dec br"></div>
+      <div class="conv-label">Kilowatt ↔ Cavalli vapore (HP)</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <div class="field-unit">Kilowatt [kW]</div>
+          <input type="number" id="kw_hp_kw" placeholder="0" oninput="conv('kw_hp_kw','kw_hp_hp', v=>v*1.34102, v=>v/1.34102)">
+        </div>
+        <button class="arrow-btn" onclick="swap('kw_hp_kw','kw_hp_hp', v=>v*1.34102, v=>v/1.34102)">⇄</button>
+        <div class="field-group">
+          <div class="field-unit">Cavalli (HP)</div>
+          <input type="number" id="kw_hp_hp" class="result-field" placeholder="0" oninput="conv('kw_hp_hp','kw_hp_kw', v=>v/1.34102, v=>v*1.34102)">
+        </div>
+      </div>
+      <div class="formula-box">
+        <span class="formula-label">Formula</span>
+        <span class="formula-text">HP = kW × <span>1.34102</span> &nbsp;|&nbsp; kW = HP ÷ <span>1.34102</span></span>
+      </div>
+    </div>
+
+    <div class="conv-card">
+      <div class="corner-dec tl"></div><div class="corner-dec tr"></div>
+      <div class="corner-dec bl"></div><div class="corner-dec br"></div>
+      <div class="conv-label">Watt ↔ BTU/ora</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <div class="field-unit">Watt [W]</div>
+          <input type="number" id="w_btu_w" placeholder="0" oninput="conv('w_btu_w','w_btu_btu', v=>v*3.41214, v=>v/3.41214)">
+        </div>
+        <button class="arrow-btn" onclick="swap('w_btu_w','w_btu_btu', v=>v*3.41214, v=>v/3.41214)">⇄</button>
+        <div class="field-group">
+          <div class="field-unit">BTU/ora [BTU/h]</div>
+          <input type="number" id="w_btu_btu" class="result-field" placeholder="0" oninput="conv('w_btu_btu','w_btu_w', v=>v/3.41214, v=>v*3.41214)">
+        </div>
+      </div>
+      <div class="formula-box">
+        <span class="formula-label">Formula</span>
+        <span class="formula-text">BTU/h = W × <span>3.41214</span> &nbsp;|&nbsp; W = BTU/h ÷ <span>3.41214</span></span>
+      </div>
+    </div>
+
+    <div class="conv-card">
+      <div class="corner-dec tl"></div><div class="corner-dec tr"></div>
+      <div class="corner-dec bl"></div><div class="corner-dec br"></div>
+      <div class="conv-label">Kilowatt ↔ Cavallo vapore (metrico)</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <div class="field-unit">Kilowatt [kW]</div>
+          <input type="number" id="kw_cv_kw" placeholder="0" oninput="conv('kw_cv_kw','kw_cv_cv', v=>v*1.35962, v=>v/1.35962)">
+        </div>
+        <button class="arrow-btn" onclick="swap('kw_cv_kw','kw_cv_cv', v=>v*1.35962, v=>v/1.35962)">⇄</button>
+        <div class="field-group">
+          <div class="field-unit">CV metrico [PS/CV]</div>
+          <input type="number" id="kw_cv_cv" class="result-field" placeholder="0" oninput="conv('kw_cv_cv','kw_cv_kw', v=>v/1.35962, v=>v*1.35962)">
+        </div>
+      </div>
+      <div class="formula-box">
+        <span class="formula-label">Formula</span>
+        <span class="formula-text">CV = kW × <span>1.35962</span> &nbsp;|&nbsp; kW = CV ÷ <span>1.35962</span></span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ==================== AREA ==================== -->
+<section class="converter-panel" id="panel-area">
+  <div class="panel-header">
+    <div class="panel-icon">▦</div>
+    <div>
+      <div class="panel-title">Area</div>
+      <div class="panel-desc">AREA / SURFACE CONVERSION MODULE</div>
+    </div>
+  </div>
+  <div class="conversions-grid">
+
+    <div class="conv-card">
+      <div class="corner-dec tl"></div><div class="corner-dec tr"></div>
+      <div class="corner-dec bl"></div><div class="corner-dec br"></div>
+      <div class="conv-label">Metro² ↔ Piede²</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <div class="field-unit">Metro² [m²]</div>
+          <input type="number" id="m2_ft2_m2" placeholder="0" oninput="conv('m2_ft2_m2','m2_ft2_ft2', v=>v*10.7639, v=>v/10.7639)">
+        </div>
+        <button class="arrow-btn" onclick="swap('m2_ft2_m2','m2_ft2_ft2', v=>v*10.7639, v=>v/10.7639)">⇄</button>
+        <div class="field-group">
+          <div class="field-unit">Piede² [ft²]</div>
+          <input type="number" id="m2_ft2_ft2" class="result-field" placeholder="0" oninput="conv('m2_ft2_ft2','m2_ft2_m2', v=>v/10.7639, v=>v*10.7639)">
+        </div>
+      </div>
+      <div class="formula-box">
+        <span class="formula-label">Formula</span>
+        <span class="formula-text">ft² = m² × <span>10.7639</span> &nbsp;|&nbsp; m² = ft² ÷ <span>10.7639</span></span>
+      </div>
+    </div>
+
+    <div class="conv-card">
+      <div class="corner-dec tl"></div><div class="corner-dec tr"></div>
+      <div class="corner-dec bl"></div><div class="corner-dec br"></div>
+      <div class="conv-label">Ettaro ↔ Acro</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <div class="field-unit">Ettaro [ha]</div>
+          <input type="number" id="ha_ac_ha" placeholder="0" oninput="conv('ha_ac_ha','ha_ac_ac', v=>v*2.47105, v=>v/2.47105)">
+        </div>
+        <button class="arrow-btn" onclick="swap('ha_ac_ha','ha_ac_ac', v=>v*2.47105, v=>v/2.47105)">⇄</button>
+        <div class="field-group">
+          <div class="field-unit">Acro [ac]</div>
+          <input type="number" id="ha_ac_ac" class="result-field" placeholder="0" oninput="conv('ha_ac_ac','ha_ac_ha', v=>v/2.47105, v=>v*2.47105)">
+        </div>
+      </div>
+      <div class="formula-box">
+        <span class="formula-label">Formula</span>
+        <span class="formula-text">ac = ha × <span>2.47105</span> &nbsp;|&nbsp; ha = ac ÷ <span>2.47105</span></span>
+      </div>
+    </div>
+
+    <div class="conv-card">
+      <div class="corner-dec tl"></div><div class="corner-dec tr"></div>
+      <div class="corner-dec bl"></div><div class="corner-dec br"></div>
+      <div class="conv-label">km² ↔ Miglio²</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <div class="field-unit">Chilometro² [km²]</div>
+          <input type="number" id="km2_mi2_km2" placeholder="0" oninput="conv('km2_mi2_km2','km2_mi2_mi2', v=>v*0.386102, v=>v/0.386102)">
+        </div>
+        <button class="arrow-btn" onclick="swap('km2_mi2_km2','km2_mi2_mi2', v=>v*0.386102, v=>v/0.386102)">⇄</button>
+        <div class="field-group">
+          <div class="field-unit">Miglio² [mi²]</div>
+          <input type="number" id="km2_mi2_mi2" class="result-field" placeholder="0" oninput="conv('km2_mi2_mi2','km2_mi2_km2', v=>v/0.386102, v=>v*0.386102)">
+        </div>
+      </div>
+      <div class="formula-box">
+        <span class="formula-label">Formula</span>
+        <span class="formula-text">mi² = km² × <span>0.386102</span> &nbsp;|&nbsp; km² = mi² ÷ <span>0.386102</span></span>
+      </div>
+    </div>
+
+    <div class="conv-card">
+      <div class="corner-dec tl"></div><div class="corner-dec tr"></div>
+      <div class="corner-dec bl"></div><div class="corner-dec br"></div>
+      <div class="conv-label">cm² ↔ Pollice²</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <div class="field-unit">Centimetro² [cm²]</div>
+          <input type="number" id="cm2_in2_cm2" placeholder="0" oninput="conv('cm2_in2_cm2','cm2_in2_in2', v=>v*0.155, v=>v/0.155)">
+        </div>
+        <button class="arrow-btn" onclick="swap('cm2_in2_cm2','cm2_in2_in2', v=>v*0.155, v=>v/0.155)">⇄</button>
+        <div class="field-group">
+          <div class="field-unit">Pollice² [in²]</div>
+          <input type="number" id="cm2_in2_in2" class="result-field" placeholder="0" oninput="conv('cm2_in2_in2','cm2_in2_cm2', v=>v/0.155, v=>v*0.155)">
+        </div>
+      </div>
+      <div class="formula-box">
+        <span class="formula-label">Formula</span>
+        <span class="formula-text">in² = cm² × <span>0.155</span> &nbsp;|&nbsp; cm² = in² ÷ <span>0.155</span></span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+</main>
+
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <div class="status-item"><div class="status-dot"></div><span>SISTEMA ONLINE</span></div>
+  <div class="status-item"><span>AERO CONV v4.1.0</span></div>
+  <div class="status-item"><span>8 MODULI ATTIVI</span></div>
+  <div class="status-item"><span>CONVERSIONE REAL-TIME</span></div>
+</div>
+
+<script>
+  // ===== TAB NAVIGATION =====
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.converter-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // ===== STANDARD CONVERSION =====
+  function fmt(v) {
+    if (v === '' || v === null || isNaN(v)) return '';
+    const abs = Math.abs(v);
+    if (abs === 0) return '0';
+    if (abs >= 0.0001 && abs < 1e10) {
+      // up to 8 significant figures
+      return parseFloat(v.toPrecision(8)).toString();
+    }
+    return v.toExponential(6);
+  }
+
+  function conv(srcId, dstId, toFn) {
+    const src = document.getElementById(srcId);
+    const dst = document.getElementById(dstId);
+    const v = parseFloat(src.value);
+    dst.value = src.value === '' ? '' : fmt(toFn(v));
+  }
+
+  function swap(id1, id2, fn1, fn2) {
+    const a = document.getElementById(id1);
+    const b = document.getElementById(id2);
+    // Use value in id1 if present, else id2
+    if (a.value !== '') {
+      b.value = fmt(fn1(parseFloat(a.value)));
+    } else if (b.value !== '') {
+      a.value = fmt(fn2(parseFloat(b.value)));
+    }
+    // toggle result-field style
+    a.classList.toggle('result-field');
+    b.classList.toggle('result-field');
+  }
+
+  // ===== TEMPERATURE CONVERSIONS =====
+  const tempFns = {
+    c_to_f: v => v * 9/5 + 32,
+    f_to_c: v => (v - 32) * 5/9,
+    c_to_k: v => v + 273.15,
+    k_to_c: v => v - 273.15,
+    f_to_k: v => (v + 459.67) * 5/9,
+    k_to_f: v => v * 9/5 - 459.67,
+    c_to_r: v => (v + 273.15) * 9/5,
+    r_to_c: v => v * 5/9 - 273.15,
+  };
+
+  function convTemp(srcId, dstId, fnKey) {
+    const src = document.getElementById(srcId);
+    const dst = document.getElementById(dstId);
+    const v = parseFloat(src.value);
+    dst.value = src.value === '' ? '' : fmt(tempFns[fnKey](v));
+  }
+
+  function swapTemp(id1, id2, fn1Key, fn2Key) {
+    const a = document.getElementById(id1);
+    const b = document.getElementById(id2);
+    if (a.value !== '') {
+      b.value = fmt(tempFns[fn1Key](parseFloat(a.value)));
+    } else if (b.value !== '') {
+      a.value = fmt(tempFns[fn2Key](parseFloat(b.value)));
+    }
+    a.classList.toggle('result-field');
+    b.classList.toggle('result-field');
+  }
+</script>
+</body>
+</html>
